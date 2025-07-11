@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messe-Bestelltool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Messe-Bestelltool</h1>
+  </header>
+
+  <main>
+    <section id="kunden-section">
+      <h2>Kunden</h2>
+      <input type="text" id="kundensuche" placeholder="Kundennamen suchen...">
+      <div id="kundenliste"></div>
+      <button id="neukunde-btn">Neuen Kunden anlegen</button>
+      <form id="neukunde-form" hidden>
+        <h3>Neukunde</h3>
+        <input required placeholder="Firma" id="firma">
+        <input required placeholder="Vorname" id="vorname">
+        <input required placeholder="Nachname" id="nachname">
+        <input required placeholder="Straße" id="straße">
+        <input required placeholder="PLZ" id="plz">
+        <input required placeholder="Ort" id="ort">
+        <input placeholder="Land" id="land" value="Deutschland">
+        <input required placeholder="Telefon" id="telefon">
+        <input required placeholder="E-Mail" id="email">
+        <input placeholder="USt-ID (nur für EU-Ausland)" id="ustid">
+        <button type="submit">Speichern</button>
+      </form>
+    </section>
+
+    <section id="artikel-section">
+      <h2>Artikel</h2>
+      <input type="text" id="artikelsuche" placeholder="Artikelnummer oder Name...">
+      <div id="artikelliste"></div>
+    </section>
+
+    <section id="warenkorb-section">
+      <h2>Warenkorb</h2>
+      <table id="warenkorb">
+        <thead>
+          <tr><th>Nr</th><th>Bezeichnung</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="gesamtbetrag"></div>
+      <label>Lieferdatum: <input type="date" id="lieferdatum"></label>
+      <label>Kommentar: <textarea id="kommentar"></textarea></label>
+      <button id="export-btn">Exportieren (CSV)</button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
