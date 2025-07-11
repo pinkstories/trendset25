@@ -1,41 +1,51 @@
+// script.js
 
-let kunden = [];
-let artikel = [];
+let kunden = window.kundenData;
+let artikel = window.artikelData;
 let warenkorb = [];
 let ausgewaehlterKunde = null;
 
-// Daten laden
-fetch('kunden.json')
-  .then(r => r.json())
-  .then(data => kunden = data);
-
-fetch('artikel.json')
-  .then(r => r.json())
-  .then(data => artikel = data);
+function normalizeString(str) {
+  return (str || '')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ß/g, 'ss')
+    .toLowerCase();
+}
 
 // Kundensuche
 const kundensuche = document.getElementById('kundensuche');
 const kundenliste = document.getElementById('kundenliste');
 kundensuche.addEventListener('input', () => {
-  const suchbegriff = kundensuche.value.toLowerCase();
+  const suchbegriff = normalizeString(kundensuche.value);
   kundenliste.innerHTML = '';
-  kunden.filter(k => k.firma.toLowerCase().includes(suchbegriff))
-        .forEach(k => {
-          const div = document.createElement('div');
-          div.textContent = `${k.firma} (${k.kundennummer})`;
-          if (k.gesperrt) div.style.color = 'red';
-          div.onclick = () => ausgewaehlterKunde = k;
-          kundenliste.appendChild(div);
-        });
+  if (!suchbegriff || suchbegriff.length < 2) return;
+
+  kunden.filter(k => {
+    const name = normalizeString(k.firma || `${k.vorname || ''} ${k.nachname || ''}`);
+    return name.includes(suchbegriff);
+  }).forEach(k => {
+    const div = document.createElement('div');
+    const anzeigename = k.firma || `${k.vorname || ''} ${k.nachname || ''}`.trim();
+    div.textContent = `${anzeigename} (${k.kundennummer})`;
+    if (k.gesperrt) div.style.color = 'red';
+    div.style.cursor = 'pointer';
+    div.onclick = () => {
+      ausgewaehlterKunde = k;
+      kundensuche.value = `${anzeigename} (${k.kundennummer})`;
+      kundenliste.innerHTML = '';
+    };
+    kundenliste.appendChild(div);
+  });
 });
 
 // Artikelsuche
 const artikelsuche = document.getElementById('artikelsuche');
 const artikelliste = document.getElementById('artikelliste');
 artikelsuche.addEventListener('input', () => {
-  const such = artikelsuche.value.toLowerCase();
+  const such = normalizeString(artikelsuche.value);
   artikelliste.innerHTML = '';
-  artikel.filter(a => a.name.toLowerCase().includes(such) || a.artikelnummer.includes(such))
+  artikel.filter(a => normalizeString(a.name).includes(such) || a.artikelnummer.includes(such))
          .forEach(a => {
            const row = document.createElement('div');
            row.innerHTML = `
@@ -105,4 +115,5 @@ function exportCSV() {
   link.download = 'bestellung.csv';
   link.click();
 }
+
 document.getElementById('export-btn').addEventListener('click', exportCSV);
