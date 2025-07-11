@@ -12,34 +12,20 @@
   </header>
 
   <main>
-    <section id="kunden-section">
+    <section>
       <h2>Kunden</h2>
       <input type="text" id="kundensuche" placeholder="Kundennamen suchen...">
       <div id="kundenliste"></div>
       <button id="neukunde-btn">Neuen Kunden anlegen</button>
-      <form id="neukunde-form" hidden>
-        <h3>Neukunde</h3>
-        <input required placeholder="Firma" id="firma">
-        <input required placeholder="Vorname" id="vorname">
-        <input required placeholder="Nachname" id="nachname">
-        <input required placeholder="Straße" id="straße">
-        <input required placeholder="PLZ" id="plz">
-        <input required placeholder="Ort" id="ort">
-        <input placeholder="Land" id="land" value="Deutschland">
-        <input required placeholder="Telefon" id="telefon">
-        <input required placeholder="E-Mail" id="email">
-        <input placeholder="USt-ID (nur für EU-Ausland)" id="ustid">
-        <button type="submit">Speichern</button>
-      </form>
     </section>
 
-    <section id="artikel-section">
+    <section>
       <h2>Artikel</h2>
       <input type="text" id="artikelsuche" placeholder="Artikelnummer oder Name...">
       <div id="artikelliste"></div>
     </section>
 
-    <section id="warenkorb-section">
+    <section>
       <h2>Warenkorb</h2>
       <table id="warenkorb">
         <thead>
@@ -54,6 +40,36 @@
     </section>
   </main>
 
+  <script>
+    window.kundenData = [{
+      "kundennummer": "10001",
+      "firma": "Sörgelei GmbH",
+      "vorname": "Max",
+      "nachname": "Muster",
+      "straße": "Hauptstraße 1",
+      "plz": "12345",
+      "ort": "Musterstadt",
+      "land": "Deutschland",
+      "telefon": "0123456789",
+      "email": "test@example.com",
+      "ustid": "DE123456789",
+      "gesperrt": false
+    }];
+
+    window.artikelData = [{
+      "artikelnummer": "A100",
+      "name": "Kerze Classic",
+      "einheit": 6,
+      "preis": 12.5,
+      "aktiv": true
+    }, {
+      "artikelnummer": "A200",
+      "name": "Duftkerze Lavendel",
+      "einheit": 3,
+      "preis": 8.9,
+      "aktiv": true
+    }];
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
