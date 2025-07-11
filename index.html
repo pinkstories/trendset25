@@ -1,75 +1,119 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Messe-Bestelltool</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header>
-    <h1>Messe-Bestelltool</h1>
-  </header>
+window.addEventListener('DOMContentLoaded', () => {
+  let kunden = window.kundenData || [];
+  let artikel = window.artikelData || [];
+  let warenkorb = [];
+  let ausgewaehlterKunde = null;
 
-  <main>
-    <section>
-      <h2>Kunden</h2>
-      <input type="text" id="kundensuche" placeholder="Kundennamen suchen...">
-      <div id="kundenliste"></div>
-      <button id="neukunde-btn">Neuen Kunden anlegen</button>
-    </section>
+  function normalizeString(str) {
+    return (str || '')
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/ß/g, 'ss')
+      .toLowerCase();
+  }
 
-    <section>
-      <h2>Artikel</h2>
-      <input type="text" id="artikelsuche" placeholder="Artikelnummer oder Name...">
-      <div id="artikelliste"></div>
-    </section>
+  // Kundensuche
+  const kundensuche = document.getElementById('kundensuche');
+  const kundenliste = document.getElementById('kundenliste');
+  kundensuche.addEventListener('input', () => {
+    const suchbegriff = normalizeString(kundensuche.value);
+    kundenliste.innerHTML = '';
+    if (!suchbegriff || suchbegriff.length < 2) return;
 
-    <section>
-      <h2>Warenkorb</h2>
-      <table id="warenkorb">
-        <thead>
-          <tr><th>Nr</th><th>Bezeichnung</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th></th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div id="gesamtbetrag"></div>
-      <label>Lieferdatum: <input type="date" id="lieferdatum"></label>
-      <label>Kommentar: <textarea id="kommentar"></textarea></label>
-      <button id="export-btn">Exportieren (CSV)</button>
-    </section>
-  </main>
+    kunden.filter(k => {
+      const name = normalizeString(k.firma || `${k.vorname || ''} ${k.nachname || ''}`);
+      return name.includes(suchbegriff);
+    }).forEach(k => {
+      const div = document.createElement('div');
+      const anzeigename = k.firma || `${k.vorname || ''} ${k.nachname || ''}`.trim();
+      div.textContent = `${anzeigename} (${k.kundennummer})`;
+      if (k.gesperrt) div.style.color = 'red';
+      div.style.cursor = 'pointer';
+      div.onclick = () => {
+        ausgewaehlterKunde = k;
+        kundensuche.value = `${anzeigename} (${k.kundennummer})`;
+        kundenliste.innerHTML = '';
+      };
+      kundenliste.appendChild(div);
+    });
+  });
 
-  <script>
-    window.kundenData = [{
-      "kundennummer": "10001",
-      "firma": "Sörgelei GmbH",
-      "vorname": "Max",
-      "nachname": "Muster",
-      "straße": "Hauptstraße 1",
-      "plz": "12345",
-      "ort": "Musterstadt",
-      "land": "Deutschland",
-      "telefon": "0123456789",
-      "email": "test@example.com",
-      "ustid": "DE123456789",
-      "gesperrt": false
-    }];
+  // Artikelsuche
+  const artikelsuche = document.getElementById('artikelsuche');
+  const artikelliste = document.getElementById('artikelliste');
+  artikelsuche.addEventListener('input', () => {
+    const such = normalizeString(artikelsuche.value);
+    artikelliste.innerHTML = '';
+    artikel.filter(a => normalizeString(a.name).includes(such) || a.artikelnummer.includes(such))
+           .forEach(a => {
+             const row = document.createElement('div');
+             row.innerHTML = `
+               <strong>${a.name}</strong> (${a.artikelnummer})<br>
+               <button onclick='updateMenge("${a.artikelnummer}", -${a.einheit})' style="background:red">-</button>
+               <button onclick='updateMenge("${a.artikelnummer}", ${a.einheit})' style="background:green">+</button>
+             `;
+             artikelliste.appendChild(row);
+           });
+  });
 
-    window.artikelData = [{
-      "artikelnummer": "A100",
-      "name": "Kerze Classic",
-      "einheit": 6,
-      "preis": 12.5,
-      "aktiv": true
-    }, {
-      "artikelnummer": "A200",
-      "name": "Duftkerze Lavendel",
-      "einheit": 3,
-      "preis": 8.9,
-      "aktiv": true
-    }];
-  </script>
-  <script src="script.js"></script>
-</body>
-</html>
+  // Menge im Warenkorb
+  function updateMenge(artikelnummer, delta) {
+    const art = artikel.find(a => a.artikelnummer === artikelnummer);
+    if (!art) return;
+    let pos = warenkorb.find(p => p.artikelnummer === artikelnummer);
+    if (!pos) {
+      if (delta > 0) {
+        warenkorb.push({ ...art, menge: delta });
+      }
+    } else {
+      pos.menge += delta;
+      if (pos.menge <= 0) {
+        warenkorb = warenkorb.filter(p => p.artikelnummer !== artikelnummer);
+      }
+    }
+    renderWarenkorb();
+  }
+
+  function renderWarenkorb() {
+    const tbody = document.querySelector('#warenkorb tbody');
+    tbody.innerHTML = '';
+    let gesamt = 0;
+    warenkorb.forEach(p => {
+      const row = document.createElement('tr');
+      const summe = p.menge * p.preis;
+      gesamt += summe;
+      row.innerHTML = `
+        <td>${p.artikelnummer}</td>
+        <td>${p.name}</td>
+        <td>${p.menge}</td>
+        <td>${p.preis.toFixed(2)}€</td>
+        <td>${summe.toFixed(2)}€</td>
+        <td><button onclick='updateMenge("${p.artikelnummer}", -${p.einheit})'>X</button></td>
+      `;
+      tbody.appendChild(row);
+    });
+    document.getElementById('gesamtbetrag').textContent = `Gesamt: ${gesamt.toFixed(2)}€`;
+  }
+
+  // Export als CSV
+  function exportCSV() {
+    if (!ausgewaehlterKunde) return alert("Bitte zuerst einen Kunden wählen.");
+    const zeilen = warenkorb.map(p => [
+      ausgewaehlterKunde.kundennummer,
+      ausgewaehlterKunde.firma,
+      p.artikelnummer,
+      p.menge,
+      p.preis.toFixed(2),
+      (p.menge * p.preis).toFixed(2)
+    ]);
+    const header = ['Kundennummer', 'Kundenname', 'Artikelnummer', 'Menge', 'Einzelpreis', 'Gesamtpreis'];
+    const csv = [header, ...zeilen].map(e => e.join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'bestellung.csv';
+    link.click();
+  }
+
+  document.getElementById('export-btn').addEventListener('click', exportCSV);
+});
